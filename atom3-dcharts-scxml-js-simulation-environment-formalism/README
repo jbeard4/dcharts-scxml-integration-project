@@ -1,0 +1,13 @@
+The goal of this formalism is to support the following functionality:
+	* support interactive simulation of DCharts models through a web interface
+	* provide convenient interface to export scxml and javascript from dcharts models
+
+This formalism brings together and depends on three separate sub-components:
+	* a DCharts-to-SCXML translator
+	* scxml-js (an scxml-to-javascript compiler)
+	* DCharts HTTP Simulation tools
+		- DCharts Debug HTTP Server
+		- Simple HTTP Proxy Server
+		- Generic Statechart Simulation Web Client front-end
+
+It provides an AToM3 buttons model and helper functions that leverage the above components. 

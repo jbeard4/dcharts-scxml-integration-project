@@ -1,0 +1,238 @@
+<!-- 
+Load up a statechart model (should be parameterizable). 
+Provide an interface to send events (like a console).
+Provide an interface to specify whether changes in state should also be sent to a server somewhere, and where it should be sent (interacts with the server component)
+Provide an interface to start/stop/restart simulation.
+-->
+
+<!-- 
+decisions to make about this: use HTML? or SVG?
+Some kind of console we can already use here? Really we just want to enter some text into a text area, and then press enter to submit it. Right? Maybe also a set of buttons that the user can push as well... All of this is possible, based on meta-info already in the SC ( i think ).
+
+ok, so we need some basic widgets and whatnot. this is very possible with html, so i should prolly just start with that. 
+
+The things that get parameterized here should be: 
+* the path of the script to load
+* the name of the constructor function in the compiled code
+* the location of the server to send the events to (not used, except to populate the initial form field)
+
+Uhoh. May also need to load other scripts to support the action code in the statechart model. But we don't want to require modifying this host file... So, again, we can allow them to pass stuff in via parameters, load up other scripts, in order. Or allow this to be parameterized by reading some other external js file which may be empty (e.g. script-deps.js). Then let jquery load these up in order using some nice tail recursion. I think that would be best. External file to define other script dependencies. Don't want to put too much stuff into the query string... But then, how do we hook all of that together from AToM3? It's tricky, because presumably you wouldn't be doing that much development from atom3... you'd be compiling and doing all of your testing and stuff in the browser. I could optionally disable generating action code when simulating in this way... And maybe that's the right thing to do. Except that that can actually change the semantics of the model... Fail. At the moment, it's not clear to me what the solution is... How did dcharts do it? 
+Could expose it in the UI: Load external script. Nice, and we can use these other mechanisms as a backup. Like putting an array in the query string parameter. Cool. Then the only tricky thing is that the external scripts will be need to be visible to the web server, which is tricky because this will prolly be running in .atom3. Or not. Just don't make it run in a private directory. Easier to think about. OK. So this will give paths to scripts relative to current working directory. OK. 
+-->
+
+<html>
+	<head>
+		<style type="text/css">
+			div#consoleOutput {
+				border : 1px solid #d4d4d4;
+				height : 100px;
+				width: 400px;
+				overflow : auto;
+			}
+		</style>
+		<script type="text/javascript" src="jquery-1.4.3.min.js"></script>
+		<script type="text/javascript" src="DChartsDebugListenerClient.js"></script>
+		<script type="text/javascript">
+			//decode query strings
+			//code based on: http://stackoverflow.com/questions/901115/get-querystring-values-with-jquery/2880929#2880929
+			function getUrlParams(){
+				 var e,
+					 a = /\+/g,  // Regex for replacing addition symbol with a space
+					 r = /([^&=]+)=?([^&]*)/g,
+					 d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+					 q = window.location.search.substring(1),
+					 urlParams = {};
+
+				 while (e = r.exec(q))
+					 urlParams[d(e[1])] = d(e[2]);
+	
+				return urlParams;
+			}
+
+			$(document).ready(function(){
+				var consoleInput = $("#consoleInput"),
+					consoleOutput = $("#consoleOutput"),
+					sendEventButton = $("#sendEventButton"),
+					playButton = $("#playButton"),
+					pauseButton = $("#pauseButton"),
+					resetButton = $("#resetButton"),
+					listenerServerCheckbox = $("#listenerServerCheckbox"),
+					urlInput = $("#urlInput"),
+					listenerServerButton = $("#listenerServerButton"),
+					argumentInput  = $("#argumentInput"),
+					showMoreButton = $("#showMoreInputButton"),
+					moreInput = $("#moreInput");
+
+				function writeToConsole(s){
+					var p = $('<p></p>').text("> " + s).hide();
+					consoleOutput.prepend(p);
+					p.fadeIn();
+				}
+					
+				var urlParams = getUrlParams();
+
+				//set initial value of listener server url, if available
+				if(urlParams.listenerServerURL) urlInput.value=urlParams.listenerServerURL;
+
+				//we keep one statechart instance per page
+				var scInstance;
+				var listener = new DChartsDebugListenerClient();
+
+				function setupStatechartInstance(){
+					writeToConsole("Setting up new statechart instance...");
+					scInstance = new window[urlParams.constructorFunctionName]()
+
+					if(listenerServerCheckbox[0].checked){
+						scInstance.addListener(listener);
+					}
+
+					scInstance.initialize(); 
+					writeToConsole(scInstance.getCurrentConfiguration());
+				}
+
+				//load script based on url params
+				if(urlParams.compiledScriptLocation){
+					$.getScript(urlParams.compiledScriptLocation,function(){
+
+						function finishSetup(){
+
+							//TODO: make it so that the state of the UI of these buttons is statechart-oriented
+					
+							//create a new statechart instance
+							playButton.click(function(){
+								if(!scInstance){
+									setupStatechartInstance()
+									resetButton.attr('disabled',false);
+								}else{
+									//TODO: write XSLT transform to support this
+									scInstance.$UNPAUSE()
+								}
+							
+								//update the UI
+								playButton.attr('disabled',true);
+								pauseButton.attr('disabled',false);
+							});
+
+							pauseButton.click(function(){
+								//TODO: write XSLT transform to support this
+								scInstance.$PAUSE()
+
+								//update the UI
+								pauseButton.attr('disabled',true);
+								playButton.attr('disabled',false);
+							});
+							
+							resetButton.click(function(){
+								//pause statechart
+								scInstance.$PAUSE()
+
+								//clear graphical model on the server
+								if(listenerServerCheckbox[0].checked){
+									$.post("/",{command:"clear"})
+								}
+								
+								//setup new instance
+								setupStatechartInstance()
+							});
+
+
+							function sendEvent(e){
+								//send event
+								try{
+									scInstance[consoleInput[0].value](eval(argumentInput[0].value));
+
+									//write new state to the console
+									writeToConsole(scInstance.getCurrentConfiguration());
+								}catch(e){
+									writeToConsole("Error sending event: " + e.message);
+								}
+
+								//clear the input field
+								consoleInput[0].value = "";
+								argumentInput[0].value = "";
+							}
+
+							consoleInput.keypress(function(e){
+								if(e.which == 13){
+									sendEvent();
+								}
+							});
+
+							sendEventButton.click(function(e){
+								sendEvent();
+							});
+
+						}
+
+						//pull down the support script, if one is specified
+						if(urlParams.supportScriptLocation){
+							$.getScript(urlParams.supportScriptLocation,finishSetup)
+						}else{
+							finishSetup();
+						}
+
+					});
+				}
+
+				listenerServerCheckbox.click(function(){
+					if(listenerServerCheckbox[0].checked){
+						//add listener
+						if(scInstance) scInstance.addListener(listener);
+
+						//enable form
+						urlInput.attr('disabled',false);
+						listenerServerButton.attr('disabled',false);
+					}else{
+						//remove listener
+						if(scInstance) scInstance.removeListener(listener);
+
+						//disable form
+						urlInput.attr('disabled',true);
+						listenerServerButton.attr('disabled',true);
+					}
+				});
+
+				//TODO: set up listener configuration stuff
+				function showMoreInput(){
+					moreInput.fadeIn();
+					showMoreButton.text("-");
+					showMoreButton.unbind();
+					showMoreButton.click(hideMoreInput);
+				};
+
+				function hideMoreInput(){
+					moreInput.fadeOut();
+					showMoreButton.text("+");
+					showMoreButton.unbind();
+					showMoreButton.click(showMoreInput);
+				};
+
+				showMoreButton.click(showMoreInput);
+					
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Simulation Console</h1>
+		<div>
+			<button id="playButton">Play</button>
+			<button id="pauseButton" disabled>Pause</button>
+			<button id="resetButton" disabled>Reset</button>	
+		</div>
+		<div>
+			<input type="text" id="consoleInput"></input><button id="sendEventButton">Send Event</button> 
+			<button id="showMoreInputButton">+</button>
+			<span id="moreInput" style="display:none;">With data <em>(optional)</em>:<input type="text" id="argumentInput"></input></span>
+			<div id="consoleOutput"></div>
+		</div>
+		<h1>Configuration</h1>
+		<div>
+			<div>
+				Send Changes in State to Server?<input type="checkbox" id="listenerServerCheckbox" checked="true"></input>
+			</div>
+			<div>
+				<input type="text" id="urlInput" value="http://localhost:12345"></input><button id="listenerServerButton">Update Listener Server URL</button>
+			</div>
+		</div>
+	</body>
+</html>
