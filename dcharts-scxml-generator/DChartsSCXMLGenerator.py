@@ -83,7 +83,7 @@ def dchartsActionCodeToSCXML(parentElement,code):
 		script.text = instateRE.sub(r"In(\1)",script.text)
 
 
-def generate(nodeListDict):
+def generate(nodeListDict,outFilePath="out.scxml"):
 	#set up all the inner functions and variables we need
 	#we use inner functions here so that we don't need to pass around a reference to doc
 
@@ -296,6 +296,6 @@ def generate(nodeListDict):
 
 	print(etree.tostring(scxmlRoot, pretty_print=True))
 	et = etree.ElementTree(scxmlRoot)
-	et.write("out.scxml",pretty_print=True)
+	et.write(outFilePath,pretty_print=True)
 
 	return scxmlRoot
