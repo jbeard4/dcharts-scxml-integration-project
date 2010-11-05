@@ -12,6 +12,7 @@ proxy_path = "/"
 
 class SimpleHTTPPostProxyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_POST(self):
+		global proxy_url, proxy_path
 		contentlength = string.atoi(self.headers.getheader('content-length')) 
 		#Retrieve and parse transmission
 		post_data = self.rfile.read(contentlength)

@@ -22,7 +22,7 @@ atom3i = None
 #{'Hyperedge': [<Hyperedge.Hyperedge instance at 0xb73ef6c>], 'Orthogonal': [], 'Composite': [<Composite.Composite instance at 0xb63660c>], 'ASG_DCharts': [], 'contains': [<contains.contains instance at 0xb735d6c>], 'ASG_DChartsSCXMLGenerator': [], 'Class_0': [], 'orthogonality': [], 'Server': [], 'connection': [], 'visual_settings': [], 'Basic': [<Basic.Basic instance at 0xb735d8c>, <Basic.Basic instance at 0xb735dac>], 'Port': [], 'History': []}
 
 
-class Atom3DistribServer(BaseHTTPRequestHandler):
+class DChartsDebugServer(BaseHTTPRequestHandler):
 
 
 	def _getStateById(self,nodeList,id):
@@ -95,15 +95,15 @@ class Atom3DistribServer(BaseHTTPRequestHandler):
 		
 
 #FIXME: ew, why are we using threads here? 
-class Atom3DistribServerThread(threading.Thread):
+class DChartsDebugServerThread(threading.Thread):
 	def run(self):
 		global server, port, keepGoing
-		server = HTTPServer(('', port), Atom3DistribServer)
+		server = HTTPServer(('', port), DChartsDebugServer)
 		server.timeout = 1 # 1s timeout
 		while keepGoing:
 			server.handle_request()
 		server.socket.close()  # socket can now be re-used
-		print 'stopped Atom3DistribServer'
+		print 'stopped DChartsDebugServer'
 
 def startServer(_atom3i, _atom3Model,_port):
 	global atom3i, atom3Model, port, keepGoing, semaphore
@@ -112,15 +112,15 @@ def startServer(_atom3i, _atom3Model,_port):
 	port = _port
 	keepGoing = 1
 	semaphore = threading.Semaphore()
-	print 'starting Atom3DistribServer...'	
-	Atom3DistribServerThread().start()
-	print 'started Atom3DistribServer...'	
+	print 'starting DChartsDebugServer...'	
+	DChartsDebugServerThread().start()
+	print 'started DChartsDebugServer...'	
 
 
 def stopServer():
 	global keepGoing
 	keepGoing = 0
-	print 'stopping Atom3DistribServer...'
+	print 'stopping DChartsDebugServer...'
 
 
 def isServerRunning():
