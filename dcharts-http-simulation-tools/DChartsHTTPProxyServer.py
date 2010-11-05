@@ -8,7 +8,7 @@ import httplib	#http://docs.python.org/library/httplib.html
 import urllib	#http://docs.python.org/library/urllib.html
 import pickle	#http://docs.python.org/library/pickle.html
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from SimpleHTTPPostProxyServer import SimpleHTTPPostProxyHandler
+import SimpleHTTPServer
 import pkg_resources
 
 #import pdb
@@ -20,8 +20,9 @@ receivedData = None
 server = None
 port = -1
 proxy_url = "localhost:12345"
+proxy_path = "/"
 
-#{'Hyperedge': [<Hyperedge.Hyperedge instance at 0xb73ef6c>], 'Orthogonal': [], 'Composite': [<Composite.Composite instance at 0xb63660c>], 'ASG_DCharts': [], 'contains': [<contains.contains instance at 0xb735d6c>], 'ASG_DChartsSCXMLGenerator': [], 'Class_0': [], 'orthogonality': [], 'Server': [], 'connection': [], 'visual_settings': [], 'Basic': [<Basic.Basic instance at 0xb735d8c>, <Basic.Basic instance at 0xb735dac>], 'Port': [], 'History': []}
+staticResourcesToCopyIntoCwd = ["client.html","jquery-1.4.3.min.js","DChartsDebugListenerClient.js"]
 
 class SimpleHTTPPostProxyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_POST(self):
@@ -67,11 +68,11 @@ def startServer(_port,_proxy_url):
 	print 'started SimpleHTTPPOSTProxyServer...'	
 
 	#copy the client html file into the current working directory so that we can serve it
-	clientHTMLFileName = "client.html"
-	clientHTMLFileStr = pkg_resources.resource_string(__name__,clientHTMLFileName)
-	tmpClientHtmlFile = open(clientHTMLFileName,"w")
-	tmpClientHtmlFile.write(clientHTMLFileStr);
-	tmpClientHtmlFile.close()
+	for resource in staticResourcesToCopyIntoCwd:
+		resourceStr = pkg_resources.resource_string(__name__,resource)
+		tmp = open(resource,"w")
+		tmp.write(resourceStr);
+		tmp.close()
 
 def stopServer():
 	global keepGoing

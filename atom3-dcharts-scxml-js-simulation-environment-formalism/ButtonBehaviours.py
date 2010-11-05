@@ -3,7 +3,7 @@ import os
 from DChartsSCXMLGenerator import generate
 from scxml.cgf.SCXMLCompiler import compile
 import DChartsDebugServer
-import SimpleHTTPPostProxyServer
+import DChartsHTTPProxyServer
 import webbrowser
 
 #configuration
@@ -59,7 +59,8 @@ def startStopClientServer(self):
 		#TODO: use python cgi package here instead, so that things get properly urlencoded
 		#FIXME: client.html is hardcoded here, which break modularity
 		#FIXME: StatechartExecutionContext is hardcoded here, which at the moment is safe, but breaks modularity
-		urlToOpen = "http://localhost:%s/client.html?listenerServerURL=%s&constructorFunctionName=%s&compiledScriptLocation=%s&supportScriptLocation=%s" % (
+		urlToOpen = "http://localhost:%d/client.html?listenerServerURL=%s&constructorFunctionName=%s&compiledScriptLocation=%s&supportScriptLocation=%s" % (
+			dchartsClientServerPortNumber,
 			proxy_url,
 			"StatechartExecutionContext",
 			defaultJsOutputFileName,
