@@ -54,10 +54,9 @@ class DChartsDebugServer(BaseHTTPRequestHandler):
 			if state:
 				state.graphObject_.HighLight(highlight)
 
-	def reply(self, rep):
+	def reply(self):
 		self.send_response(200)
 		self.end_headers()
-		self.wfile.write(rep)
 
 	def do_GET(self):
 		pass
@@ -92,6 +91,8 @@ class DChartsDebugServer(BaseHTTPRequestHandler):
 
 		else:
 			pass
+
+		self.reply()
 		
 
 #FIXME: ew, why are we using threads here? 
