@@ -104,7 +104,8 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 									setupStatechartInstance()
 									resetButton.attr('disabled',false);
 								}else{
-									//TODO: write XSLT transform to support this
+									//reenable listeners
+									scInstance.addListener(listener)
 									scInstance.$UNPAUSE()
 								}
 							
@@ -114,7 +115,8 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 							});
 
 							pauseButton.click(function(){
-								//TODO: write XSLT transform to support this
+								//disable listeners
+								scInstance.removeListener(listener)
 								scInstance.$PAUSE()
 
 								//update the UI
