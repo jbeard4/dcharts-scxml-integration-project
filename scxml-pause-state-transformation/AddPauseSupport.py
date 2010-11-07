@@ -18,4 +18,4 @@ def addPauseSupportToSCXMLDocument(pathToSCXML,outputFile="out.scxml"):
 
 	outputDocument.write(outputFile,pretty_print=True)
 
-	return results
+	return outputDocument
