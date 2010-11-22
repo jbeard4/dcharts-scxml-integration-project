@@ -38,6 +38,7 @@ paramsRE = re.compile(r"\[PARAMS\]")
 instateRE = re.compile(r'\[INSTATE\("(?:[^.]*\.)*([^"]*)"\)\]')
 afterRE = re.compile(r'AFTER\(([^)]*)\)')
 
+
 def dchartsActionCodeToSCXML(parentElement,code):
 	iter = actionCodeRE.finditer(code) 
 	
@@ -91,7 +92,12 @@ def generate(nodeListDict,outFilePath="out.scxml"):
 
 	elementIds = set() #we need this later on because etree doesn't have getelementbyid
 
+	historyCounter = 0;
+
 	#some helper functions
+
+	def getId(anything):
+		return anything.name.toString().strip() or (anything.getClass()=="History" and "$history_%d" % historyCounter)
 
 	def setupTopLevelState(state,e):
 		#check if he's top-level 
@@ -122,7 +128,7 @@ def generate(nodeListDict,outFilePath="out.scxml"):
 	def hyperedgeToSCXML(hyperedge):
 		e = etree.Element(scxmlNS+"transition")
 
-		targetNames = map(lambda o : o.name.toString(), hyperedge.out_connections_)
+		targetNames = map(getId, hyperedge.out_connections_)
 		targetNamesString = " ".join(targetNames)
 
 		e.attrib["target"]=targetNamesString
@@ -142,7 +148,7 @@ def generate(nodeListDict,outFilePath="out.scxml"):
 		return e
 
 	def orthogonalToSCXML(orthogonal):
-		id = orthogonal.name.toString()
+		id = getId(orthogonal)
 
 		e = etree.Element(scxmlNS + "state",{"id":id})
 
@@ -153,14 +159,14 @@ def generate(nodeListDict,outFilePath="out.scxml"):
 
 		if defaultChildState :
 			initial = etree.SubElement(e,scxmlNS + "initial")
-			transition = etree.SubElement(initial,scxmlNS + "transition",{"target":defaultChildState.name.toString()})
+			transition = etree.SubElement(initial,scxmlNS + "transition",{"target":getId(defaultChildState)})
 
 		return e
 
 	def compositeToSCXML(composite):
 
 		e = None
-		id = composite.name.toString()
+		id = getId(composite)
 		#he is either a state or a parallel
 		#we say here that if he has an orthogonality relationship, he's a parallel
 		if filter(lambda link : link in nodeListDict['orthogonality'], composite.out_connections_):
@@ -185,7 +191,7 @@ def generate(nodeListDict,outFilePath="out.scxml"):
 
 		if defaultChildState :
 			initial = etree.SubElement(e,scxmlNS + "initial")
-			transition = etree.SubElement(initial,scxmlNS + "transition",{"target":defaultChildState.name.toString()})
+			transition = etree.SubElement(initial,scxmlNS + "transition",{"target":getId(defaultChildState)})
 
 		setupTopLevelState(composite,e)
 		
@@ -195,8 +201,9 @@ def generate(nodeListDict,outFilePath="out.scxml"):
 	basicToSCXML = compositeToSCXML
 
 	def historyToSCXML(history):
+		print("HEREHEREHEREHEREHEREHEREHERE")
 		type = None
-		id = history.name.toString()
+		id = getId(history)
 		if history.star.getValueBoolean():
 			type = "deep"
 		else:
