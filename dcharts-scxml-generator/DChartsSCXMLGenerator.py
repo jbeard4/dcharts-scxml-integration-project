@@ -31,9 +31,10 @@ import pdb
 #{'Hyperedge': [<Hyperedge.Hyperedge instance at 0xb73ef6c>], 'Orthogonal': [], 'Composite': [<Composite.Composite instance at 0xb63660c>], 'ASG_DCharts': [], 'contains': [<contains.contains instance at 0xb735d6c>], 'ASG_DChartsSCXMLGenerator': [], 'Class_0': [], 'orthogonality': [], 'Server': [], 'connection': [], 'visual_settings': [], 'Basic': [<Basic.Basic instance at 0xb735d8c>, <Basic.Basic instance at 0xb735dac>], 'Port': [], 'History': []}
 
 scxmlNS = "{http://www.w3.org/2005/07/scxml}";
+scxmlJSNS = "{http://commons.apache.org/scxml-js}"
 
 # these regular expressions are for finding DCharts macros
-actionCodeRE = re.compile(r'(?:\[EVENT\("(?P<event>[^"]*)"\)\])|(?:\[DUMP\("(?P<dump>[^"]*)"\)\])')
+actionCodeRE = re.compile(r'(?:\[EVENT\("(?P<event>[^"]*)"\s*,\s*(?P<eventParam>.*)\)\])|(?:\[DUMP\("(?P<dump>[^"]*)"\)\])')
 paramsRE = re.compile(r"\[PARAMS\]")
 instateRE = re.compile(r'\[INSTATE\("(?:[^.]*\.)*([^"]*)"\)\]')
 afterRE = re.compile(r'AFTER\(([^)]*)\)')
@@ -59,10 +60,21 @@ def dchartsActionCodeToSCXML(parentElement,code):
 
 		#should only be one for each iteration
 		event = match.group("event")
+		eventParam = match.group("eventParam")
 		dump = match.group("dump")
 
 		if event:
-			etree.SubElement(parentElement,scxmlNS + "send",{"event":event})
+
+			eventAttrs = {"event":event}
+
+			if eventParam:
+				if eventParam is "None":
+					eventAttrs[scxmlJSNS + "contentexpr"]="null"
+				else:
+					eventAttrs[scxmlJSNS + "contentexpr"]=eventParam 
+
+			etree.SubElement(parentElement,scxmlNS + "send",eventAttrs)
+
 		elif dump:
 			log = etree.SubElement(parentElement,scxmlNS + "log")
 			log.text = dump
@@ -139,7 +151,9 @@ def generate(nodeListDict,outFilePath="out.scxml"):
 
 		guard = hyperedge.guard.toString().strip()
 		if guard and not guard is "1":
-			e.attrib["cond"]=instateRE.sub(r"In(\1)",guard)
+			e.attrib["cond"] =  paramsRE.sub("_event.data",
+						instateRE.sub(r"In(\1)",guard))
+			
 
 		scriptText = hyperedge.action.toString().strip()
 		if scriptText:
