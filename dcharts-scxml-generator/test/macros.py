@@ -2,7 +2,7 @@ import re
 
 #AFTER(1)
 #in action or guard code:
-eventRE = re.compile(r'(?:\[EVENT\("(?P<event>[^"]*)"\)\])|(?:\[INSTATE\("(?P<instate>[^"]*)"\)\])|(?:\[DUMP\("(?P<dump>[^"]*)"\)\])')
+eventRE = re.compile(r'(?:\[EVENT\("(?P<event>[^"]*)"\)\])|(?:\[INSTATE\("(?P<instate>[^"]*)"\)\])|(?:\[DUMP\((?P<dump>.*)\)\])')
 paramsRE = re.compile(r"\[PARAMS\]")
 #the only one that should go in guard is INSTATE
 
@@ -11,6 +11,7 @@ testEvent2 = '''controller.stopSelection()
 [EVENT("resume")] aldskjfaslk
 [INSTATE("NORMAL_MODE.MODE.RUN_CHR")] [EVENT("foo")]
 [DUMP("Starting the Digital Watch")]
+[DUMP([PARAMS[0]])]
 moar text
 			[PARAMS]
 	woasijarar

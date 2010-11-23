@@ -151,7 +151,7 @@ def DChartsSCXMLJSSimulationEnvironment_META(self, rootNode, ButtonsRootNode=Non
       self.obj199._setHierarchicalLink(False)
 
     # Action
-    self.obj199.Action.setValue(('Action', (['Python', 'OCL'], 1), (['PREcondition', 'POSTcondition'], 1), (['EDIT', 'SAVE', 'CREATE', 'CONNECT', 'DELETE', 'DISCONNECT', 'TRANSFORM', 'SELECT', 'DRAG', 'DROP', 'MOVE'], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 'from ButtonBehaviours import exportSCXML\nexportSCXML(self)\n'))
+    self.obj199.Action.setValue(('Action', (['Python', 'OCL'], 1), (['PREcondition', 'POSTcondition'], 1), (['EDIT', 'SAVE', 'CREATE', 'CONNECT', 'DELETE', 'DISCONNECT', 'TRANSFORM', 'SELECT', 'DRAG', 'DROP', 'MOVE'], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 'import ButtonBehaviours\nreload(ButtonBehaviours)\nfrom ButtonBehaviours import exportSCXML\nexportSCXML(self)\n'))
 
     # Drawing_Mode
     self.obj199.Drawing_Mode.setValue((' ', 0))
@@ -185,7 +185,7 @@ def DChartsSCXMLJSSimulationEnvironment_META(self, rootNode, ButtonsRootNode=Non
       self.obj200._setHierarchicalLink(False)
 
     # Action
-    self.obj200.Action.setValue(('Action', (['Python', 'OCL'], 1), (['PREcondition', 'POSTcondition'], 1), (['EDIT', 'SAVE', 'CREATE', 'CONNECT', 'DELETE', 'DISCONNECT', 'TRANSFORM', 'SELECT', 'DRAG', 'DROP', 'MOVE'], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 'from ButtonBehaviours import exportJavaScript\nexportJavaScript(self)\n'))
+    self.obj200.Action.setValue(('Action', (['Python', 'OCL'], 1), (['PREcondition', 'POSTcondition'], 1), (['EDIT', 'SAVE', 'CREATE', 'CONNECT', 'DELETE', 'DISCONNECT', 'TRANSFORM', 'SELECT', 'DRAG', 'DROP', 'MOVE'], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 'import ButtonBehaviours\nreload(ButtonBehaviours)\nfrom ButtonBehaviours import exportJavaScript\nexportJavaScript(self)\n'))
 
     # Drawing_Mode
     self.obj200.Drawing_Mode.setValue((' ', 0))
