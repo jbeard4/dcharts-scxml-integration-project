@@ -1,7 +1,7 @@
 import tkFileDialog
 import os
 from DChartsSCXMLGenerator import generate
-from scxml.cgf.SCXMLCompiler import compile
+from scxml.cgf.SCXMLCompiler import compile_from_path
 import DChartsDebugServer
 import DChartsHTTPProxyServer
 import webbrowser
@@ -35,7 +35,7 @@ def exportJavaScript(self):
 
 	self.initialDirectoryDict[ 'OpenSaveModel' ] = os.path.dirname(file)	#set directory preference
 
-	results = compile([location]);
+	results = compile_from_path([location]);
 	rfile = open(file,"w");
 	for result in results:
 		rfile.write(result)
@@ -80,7 +80,7 @@ def regenerateClientServerCode(self):
 	#the client server code will be instrumented with this transformation (to support a pause state), while the export code will not
 	addPauseSupportToSCXMLDocument(defaultSCXMLOutputFileName,defaultSCXMLOutputFileName)
 
-	results = compile([defaultSCXMLOutputFileName])
+	results = compile_from_path([defaultSCXMLOutputFileName])
 	#write results
 	rfile = open(defaultJsOutputFileName,"w");
 	for result in results:
