@@ -30,8 +30,9 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 				overflow : auto;
 			}
 		</style>
-		<script type="text/javascript" src="jquery-1.4.3.min.js"></script>
+		<script type="text/javascript" src="jquery-1.4.4.js"></script>
 		<script type="text/javascript" src="DChartsDebugListenerClient.js"></script>
+		<script type="text/javascript" src="client-behaviour.js"></script>
 		<script type="text/javascript">
 			//decode query strings
 			//code based on: http://stackoverflow.com/questions/901115/get-querystring-values-with-jquery/2880929#2880929
@@ -55,6 +56,7 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 					sendEventButton = $("#sendEventButton"),
 					playButton = $("#playButton"),
 					pauseButton = $("#pauseButton"),
+					stopButton = $("#stopButton"),
 					resetButton = $("#resetButton"),
 					listenerServerCheckbox = $("#listenerServerCheckbox"),
 					urlInput = $("#urlInput"),
@@ -68,6 +70,23 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 					consoleOutput.prepend(p);
 					p.fadeIn();
 				}
+
+				function setupStatechartInstance(){
+					writeToConsole("Setting up new statechart instance...");
+					var scInstance = new window[urlParams.constructorFunctionName]()
+
+					scInstance.addListener(listener)
+
+					scInstance.initialize(); 
+					writeToConsole(scInstance.getCurrentConfiguration());
+					return scInstance;
+				}
+
+				function clearServer(){
+					if(listenerServerCheckbox[0].checked){
+						$.post("/",{command:"clear"})
+					}
+				}
 					
 				var urlParams = getUrlParams();
 
@@ -75,20 +94,35 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 				if(urlParams.listenerServerURL) urlInput.value=urlParams.listenerServerURL;
 
 				//we keep one statechart instance per page
-				var scInstance;
 				var listener = new DChartsDebugListenerClient();
 
-				function setupStatechartInstance(){
-					writeToConsole("Setting up new statechart instance...");
-					scInstance = new window[urlParams.constructorFunctionName]()
+				//setup behaviour of our simulation client
+				var clientBehaviourSC = new ClientBehaviourStatechartExecutionContext();
+				
+				playButton.click(clientBehaviourSC.play);
+				pauseButton.click(clientBehaviourSC.pause);
+				stopButton.click(clientBehaviourSC.stop);
+				resetButton.click(clientBehaviourSC.reset);
 
-					if(listenerServerCheckbox[0].checked){
-						scInstance.addListener(listener);
-					}
+				function sendEvent(){
+					//send event
+					clientBehaviourSC.send_event({
+						name : consoleInput[0].value,
+						data : eval(argumentInput[0].value)
+					});
 
-					scInstance.initialize(); 
-					writeToConsole(scInstance.getCurrentConfiguration());
+					//clear the input field
+					consoleInput[0].value = "";
+					argumentInput[0].value = "";
 				}
+
+				consoleInput.keypress(function(e){
+					if(e.which == 13){
+						sendEvent();
+					}
+				});
+
+				sendEventButton.click(sendEvent);
 
 				//load script based on url params
 				if(urlParams.compiledScriptLocation){
@@ -96,72 +130,17 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 
 						function finishSetup(){
 
-							//TODO: make it so that the state of the UI of these buttons is statechart-oriented
-					
-							//create a new statechart instance
-							playButton.click(function(){
-								if(!scInstance){
-									setupStatechartInstance()
-									resetButton.attr('disabled',false);
-								}else{
-									//reenable listeners
-									scInstance.addListener(listener)
-									scInstance.$UNPAUSE()
-								}
-							
-								//update the UI
-								playButton.attr('disabled',true);
-								pauseButton.attr('disabled',false);
-							});
+							clientBehaviourSC.initialize();
 
-							pauseButton.click(function(){
-								//disable listeners
-								scInstance.removeListener(listener)
-								scInstance.$PAUSE()
-
-								//update the UI
-								pauseButton.attr('disabled',true);
-								playButton.attr('disabled',false);
-							});
-							
-							resetButton.click(function(){
-								//pause statechart
-								scInstance.$PAUSE()
-
-								//clear graphical model on the server
-								if(listenerServerCheckbox[0].checked){
-									$.post("/",{command:"clear"})
-								}
-								
-								//setup new instance
-								setupStatechartInstance()
-							});
-
-
-							function sendEvent(e){
-								//send event
-								try{
-									scInstance[consoleInput[0].value](eval(argumentInput[0].value));
-
-									//write new state to the console
-									writeToConsole(scInstance.getCurrentConfiguration());
-								}catch(e){
-									writeToConsole("Error sending event: " + e.message);
-								}
-
-								//clear the input field
-								consoleInput[0].value = "";
-								argumentInput[0].value = "";
-							}
-
-							consoleInput.keypress(function(e){
-								if(e.which == 13){
-									sendEvent();
-								}
-							});
-
-							sendEventButton.click(function(e){
-								sendEvent();
+							clientBehaviourSC.init({
+								playButton : playButton,
+								pauseButton : pauseButton,
+								stopButton : stopButton,
+								resetButton : resetButton,
+								setupStatechartInstance : setupStatechartInstance,
+								clearServer : clearServer,
+								writeToConsole : writeToConsole,
+								listener : listener
 							});
 
 						}
@@ -176,23 +155,26 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 					});
 				}
 
+				/*
+				//FIXME: for the moment, this is deprecated
 				listenerServerCheckbox.click(function(){
 					if(listenerServerCheckbox[0].checked){
 						//add listener
-						if(scInstance) scInstance.addListener(listener);
+						if(window.scInstance) window.scInstance.addListener(listener);
 
 						//enable form
 						urlInput.attr('disabled',false);
 						listenerServerButton.attr('disabled',false);
 					}else{
 						//remove listener
-						if(scInstance) scInstance.removeListener(listener);
+						if(window.scInstance) window.scInstance.removeListener(listener);
 
 						//disable form
 						urlInput.attr('disabled',true);
 						listenerServerButton.attr('disabled',true);
 					}
 				});
+				*/
 
 				//TODO: set up listener configuration stuff
 				function showMoreInput(){
@@ -218,8 +200,9 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 		<h1>Simulation Console</h1>
 		<div>
 			<button id="playButton">Play</button>
-			<button id="pauseButton" disabled>Pause</button>
-			<button id="resetButton" disabled>Reset</button>	
+			<button id="pauseButton">Pause</button>
+			<button id="stopButton">Stop</button>	
+			<button id="resetButton">Reset</button>	
 		</div>
 		<div>
 			<input type="text" id="consoleInput"></input><button id="sendEventButton">Send Event</button> 

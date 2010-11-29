@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml 
+	xmlns="http://www.w3.org/2005/07/scxml"
+	version="1.0"
+	profile="ecmascript"
+	initial="initial_default"
+	name="ClientBehaviour">
+
+	<script>
+		function enable(e){
+			e.attr("disabled",false);
+		}
+
+		function disable(e){
+			e.attr("disabled",true);
+		}
+
+	</script>
+
+	<datamodel>
+		<data id="ext"/>
+
+		<data id="scInstance"/>
+	</datamodel>
+
+	<state id="initial_default">
+		<transition event="init" target="stopped">
+			<assign location="ext" expr="_event.data" />
+		</transition>
+	</state>
+
+	<state id="stopped">
+		<onentry>
+			<script>
+				enable(ext.playButton);
+				disable(ext.pauseButton);
+				disable(ext.resetButton);
+				disable(ext.stopButton);
+			</script>
+		</onentry>
+
+		<transition event="play" target="started"/>
+	</state>
+
+	<state id="started" initial="running">
+
+		<onentry>
+			<assign location="scInstance" expr="ext.setupStatechartInstance()"/>
+		</onentry>
+
+		<onexit>
+			<script>
+				scInstance.destroy();
+				ext.clearServer();
+			</script>
+			<assign location="scInstance" expr="null"/>
+		</onexit>
+
+		<transition event="stop" target="stopped" />
+
+		<transition event="reset" target="started" />
+
+		<state id="paused">
+			<onentry>
+				<script>
+					enable(ext.playButton);
+					disable(ext.pauseButton);
+					enable(ext.resetButton);
+					enable(ext.stopButton);
+				</script>
+			</onentry>
+
+			<transition event="play" target="running">
+				<script>
+					scInstance.addListener(ext.listener)
+					scInstance.$UNPAUSE()
+				</script>
+			</transition>
+		</state>
+
+		<state id="running">
+			<onentry>
+				<script>
+					disable(ext.playButton);
+					enable(ext.pauseButton);
+					enable(ext.resetButton);
+					enable(ext.stopButton);
+				</script>
+			</onentry>
+
+			<transition event="pause" target="paused">
+				<script>
+					scInstance.removeListener(ext.listener)
+					scInstance.$PAUSE()
+				</script>
+			</transition>
+
+			<transition event="send_event" target="running">
+				<script>
+					//send event to the scInstance
+					try {
+						scInstance[_event.data.name](_event.data.data);
+						ext.writeToConsole(scInstance.getCurrentConfiguration());
+					} catch(e){
+						ext.writeToConsole("Error sending event: " + e.message);
+					}
+				</script>
+			</transition>
+		</state>
+	</state>
+
+
+</scxml>
+
+

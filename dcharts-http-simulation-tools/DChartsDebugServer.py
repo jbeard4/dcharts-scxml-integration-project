@@ -84,9 +84,8 @@ class DChartsDebugServer(BaseHTTPRequestHandler):
 
 		#TODO: transitions as well
 		elif parsed_data['command'][0] == 'clear':
-			nodelist=atom3Model.listNodes
-			for nodeType in nodeList:
-				for node in nodeType:
+			for (nodeType,nodeList) in atom3Model.listNodes.items():
+				for node in nodeList:
 					node.graphObject_.HighLight(0)
 
 		else:
