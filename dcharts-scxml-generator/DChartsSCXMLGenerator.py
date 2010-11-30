@@ -34,7 +34,7 @@ scxmlNS = "{http://www.w3.org/2005/07/scxml}";
 scxmlJSNS = "{http://commons.apache.org/scxml-js}"
 
 # these regular expressions are for finding DCharts macros
-actionCodeRE = re.compile(r'(?:\[EVENT\("(?P<event>[^"]*)"\s*,\s*(?P<eventParam>.*)\)\])|(?:\[DUMP\((?P<dump>.*)\)\])')
+actionCodeRE = re.compile(r'(?:\[EVENT\("(?P<event>[^"]*)"\s*(,\s*(?P<eventParam>.*))?\)\])|(?:\[DUMP\((?P<dump>.*)\)\])')
 paramsRE = re.compile(r"\[PARAMS\]")
 instateRE = re.compile(r'\[INSTATE\("(?:[^.]*\.)*([^"]*)"\)\]')
 afterRE = re.compile(r'AFTER\(([^)]*)\)')
@@ -69,13 +69,10 @@ def dchartsActionCodeToSCXML(parentElement,code):
 
 			eventAttrs = {"event":event}
 
-			if eventParam:
-				if eventParam is "None":
-					eventAttrs[scxmlJSNS + "contentexpr"]="null"
-				else:
-					eventParam  = paramsRE.sub("_event.data",eventParam)
-					eventParam  = instateRE.sub(r"In(\1)",eventParam)
-					eventAttrs[scxmlJSNS + "contentexpr"]=eventParam 
+			if eventParam and not eventParam == "None":
+				eventParam  = paramsRE.sub("_event.data",eventParam)
+				eventParam  = instateRE.sub(r"In(\1)",eventParam)
+				eventAttrs[scxmlJSNS + "contentexpr"]=eventParam 
 
 			etree.SubElement(parentElement,scxmlNS + "send",eventAttrs)
 
