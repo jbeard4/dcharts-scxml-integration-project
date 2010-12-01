@@ -77,10 +77,9 @@ def dchartsActionCodeToSCXML(parentElement,code):
 			etree.SubElement(parentElement,scxmlNS + "send",eventAttrs)
 
 		elif dump:
-			log = etree.SubElement(parentElement,scxmlNS + "log")
-			log.text = dump
-			log.text = paramsRE.sub("_event.data",log.text)
-			log.text = instateRE.sub(r"In(\1)",log.text)
+			dump = paramsRE.sub("_event.data",dump)
+			dump = instateRE.sub(r"In(\1)",dump)
+			log = etree.SubElement(parentElement,scxmlNS + "log",{"expr":dump})
 		else:
 			pass
 
