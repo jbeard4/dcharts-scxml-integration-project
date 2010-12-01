@@ -22,7 +22,7 @@ port = -1
 proxy_url = "localhost:12345"
 proxy_path = "/"
 
-staticResourcesToCopyIntoCwd = ["client.html","jquery-1.4.3.min.js","DChartsDebugListenerClient.js"]
+staticResourcesToCopyIntoCwd = ["client.html","jquery-1.4.4.js","DChartsDebugListenerClient.js","client-behaviour.js"]
 
 class SimpleHTTPPostProxyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_POST(self):

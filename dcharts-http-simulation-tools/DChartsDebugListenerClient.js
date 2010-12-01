@@ -3,12 +3,12 @@
 DChartsDebugListenerClient = function(){
 
 	this.onEntry = function(state){
-		console.log("Entering ",state);
+		//console.log("Entering ",state);
 		jQuery.post("/",{stateid:state,command:"enter"})
 	}
 
 	this.onExit = function(state){
-		console.log("Exiting ",state);
+		//console.log("Exiting ",state);
 		jQuery.post("/",{stateid:state,command:"exit"})
 	}
 

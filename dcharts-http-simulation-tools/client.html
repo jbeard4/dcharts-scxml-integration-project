@@ -71,6 +71,13 @@ Could expose it in the UI: Load external script. Nice, and we can use these othe
 					p.fadeIn();
 				}
 
+				if(!window.console){
+					window.console={
+						log:writeToConsole,
+						debug:writeToConsole
+					};
+				}
+
 				function setupStatechartInstance(){
 					writeToConsole("Setting up new statechart instance...");
 					var scInstance = new window[urlParams.constructorFunctionName]()
