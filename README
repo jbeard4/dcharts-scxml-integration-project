@@ -1,0 +1,3 @@
+This project provides several high-level components to facilitate the integration of the AToM3 research modelling environment with the scxml-js Statecharts compiler. 
+
+This project can be used as a reference for integrating a statecharts execution environment with a graphical modelling environment.
